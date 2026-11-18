@@ -7,6 +7,7 @@
 - `index.html` — ゲーム本体（HTML / CSS / JavaScript をすべて1ファイルに収録）
 - 外部ライブラリ・ビルドツール・サーバーは不要。ブラウザで `index.html` を直接開けば動く
 - `react-app/` — 同じゲームの React + Vite 版。詳細は `react-app/CLAUDE.md`。仕様を変えるときは両方の整合に注意
+- `.github/workflows/deploy.yml` — `main` への push で `react-app/` をビルドし GitHub Pages に公開（https://kouichi-katsuta.github.io/punicchi/）
 
 ## ゲーム仕様
 

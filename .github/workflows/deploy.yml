@@ -1,4 +1,4 @@
-# main ブランチに push すると自動でビルドして GitHub Pages に公開する
+# main ブランチに push すると react-app/ を自動でビルドして GitHub Pages に公開する
 name: Deploy to GitHub Pages
 
 on:
@@ -18,6 +18,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: react-app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +34,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: react-app/dist
 
   deploy:
     needs: build

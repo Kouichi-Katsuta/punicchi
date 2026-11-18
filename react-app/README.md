@@ -12,23 +12,14 @@ npm run dev -- --host   # 同じWi-Fiのスマホからも確認できる
 
 ## GitHub Pages で公開する（初回のみ）
 
-1. GitHub で新しいリポジトリを作る（例: `punicchi`）
-2. この `react-app` フォルダをリポジトリのルートとして push する
-   ```bash
-   cd react-app
-   git init
-   git add .
-   git commit -m "first commit"
-   git branch -M main
-   git remote add origin https://github.com/<ユーザー名>/punicchi.git
-   git push -u origin main
-   ```
-3. GitHub のリポジトリ画面で **Settings → Pages → Build and deployment → Source** を **GitHub Actions** にする
-4. **Actions** タブでワークフロー「Deploy to GitHub Pages」が完了するのを待つ
-   （3 の前に push して失敗していたら、Actions タブから **Re-run** する）
-5. `https://<ユーザー名>.github.io/punicchi/` で公開される。この URL を友人に送れば OK
+リポジトリ: https://github.com/Kouichi-Katsuta/punicchi （この `react-app` はリポジトリ内のサブフォルダ）
 
-以降は `main` に push するたびに自動でビルド・公開される（`.github/workflows/deploy.yml`）。
+1. GitHub のリポジトリ画面で **Settings → Pages → Build and deployment → Source** を **GitHub Actions** にする
+2. **Actions** タブでワークフロー「Deploy to GitHub Pages」が完了するのを待つ
+   （1 の前に push して失敗していたら、Actions タブから **Re-run all jobs** する）
+3. https://kouichi-katsuta.github.io/punicchi/ で公開される。この URL を友人に送れば OK
+
+以降は `main` に push するたびに自動でビルド・公開される（リポジトリ直下の `.github/workflows/deploy.yml` が `react-app/` をビルドする）。
 
 ## スマホで遊ぶ
 

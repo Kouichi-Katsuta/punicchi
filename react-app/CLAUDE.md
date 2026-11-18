@@ -12,15 +12,15 @@ npm run build   # dist/ に本番ビルド（base: "./" なので静的ホステ
 
 ## 公開（GitHub Pages）
 
-- この `react-app` フォルダがリポジトリのルート
-- `main` に push すると `.github/workflows/deploy.yml` がビルドして GitHub Pages に公開する
+- リポジトリのルートは親フォルダ。この `react-app` はサブフォルダ
+- `main` に push すると、リポジトリ直下の `.github/workflows/deploy.yml` が `react-app/` をビルドして GitHub Pages に公開する（https://kouichi-katsuta.github.io/punicchi/）
 - `vite.config.js` の `base: "./"` により、`/<リポジトリ名>/` 配下でもパスが壊れない。変更しないこと
 - 手順の詳細は `README.md`
 
 ## ディレクトリ構成
 
 ```
-.github/workflows/deploy.yml   GitHub Pages 自動公開
+../.github/workflows/deploy.yml   GitHub Pages 自動公開（リポジトリ直下）
 public/                  manifest.webmanifest・アイコン（ホーム画面追加用）・favicon
 src/
   main.jsx               エントリーポイント

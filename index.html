@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ぷにっち育成</title>
+<style>
+  :root { --shell:#ff9ec4; --shell-dark:#e5739f; --screen:#c9e4b4; --ink:#2f3b2a; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 30% 20%, #fff3f8, #ffd6e7 60%, #f7b8d2); font-family:"Hiragino Maru Gothic ProN","Meiryo",sans-serif; }
+  .device { width:360px; padding:34px 28px 30px; background:var(--shell); border-radius:48% 48% 44% 44% / 40% 40% 56% 56%;
+    box-shadow: inset -10px -14px 0 var(--shell-dark), 0 18px 40px rgba(160,40,90,.35); }
+  .title { text-align:center; color:#fff; font-weight:bold; letter-spacing:.2em; text-shadow:0 2px 0 var(--shell-dark); margin-bottom:12px; }
+  .screen { background:var(--screen); border:8px solid #8a5a6e; border-radius:18px; height:300px; position:relative; overflow:hidden;
+    color:var(--ink); transition:background .6s; }
+  .screen.night { background:#2b3350; color:#dfe6ff; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; padding:8px 10px; font-size:11px; }
+  .bar { height:7px; background:rgba(0,0,0,.15); border-radius:4px; overflow:hidden; margin-top:2px; }
+  .bar > i { display:block; height:100%; background:currentColor; transition:width .4s; }
+  .info { position:absolute; top:78px; left:0; right:0; text-align:center; font-size:12px; }
+  #pet { position:absolute; left:50%; bottom:34px; width:130px; height:130px; transform:translateX(-50%); }
+  #pet.bounce { animation:bounce 1.2s infinite ease-in-out; }
+  #pet.jump { animation:jump .4s 3; }
+  #pet.shake { animation:shake .5s 2; }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
+  @keyframes jump { 50%{transform:translateX(-50%) translateY(-30px)} }
+  @keyframes shake { 25%{transform:translateX(-56%)} 75%{transform:translateX(-44%)} }
+  .fx { position:absolute; font-size:26px; pointer-events:none; animation:float 1.5s forwards; }
+  @keyframes float { from{opacity:1; transform:translateY(0)} to{opacity:0; transform:translateY(-50px)} }
+  .msg { position:absolute; bottom:6px; left:0; right:0; text-align:center; font-size:12px; min-height:16px; }
+  .dirt { position:absolute; font-size:20px; }
+  .zzz { position:absolute; right:70px; top:110px; font-size:22px; animation:float 2s infinite; }
+  .buttons { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:18px; }
+  button { border:none; border-radius:50%; aspect-ratio:1; background:#fff4b8; box-shadow:0 5px 0 #d8b94a; font-size:22px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:inherit; }
+  button span { font-size:10px; margin-top:2px; color:#6b5520; }
+  button:active { transform:translateY(4px); box-shadow:0 1px 0 #d8b94a; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .sub { display:flex; justify-content:space-between; margin-top:14px; }
+  .sub button { border-radius:14px; aspect-ratio:auto; padding:6px 12px; font-size:12px; flex-direction:row; }
+  .overlay { position:absolute; inset:0; background:rgba(255,255,255,.92); display:none; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#2f3b2a; text-align:center; padding:10px; z-index:5; }
+  .overlay.show { display:flex; }
+  .overlay .row { display:flex; gap:12px; }
+  .overlay button { width:70px; border-radius:14px; aspect-ratio:auto; padding:10px; font-size:24px; }
+  .dex { font-size:11px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="device">
+  <div class="title">ぷにっち</div>
+  <div class="screen" id="screen">
+    <div class="stats">
+      <div>🍙 おなか<div class="bar" style="color:#e2793f"><i id="b-hunger"></i></div></div>
+      <div>🎵 きげん<div class="bar" style="color:#e04f8a"><i id="b-happy"></i></div></div>
+      <div>🫧 きれい<div class="bar" style="color:#3b8fd0"><i id="b-clean"></i></div></div>
+      <div>⚡ げんき<div class="bar" style="color:#c9a20a"><i id="b-energy"></i></div></div>
+    </div>
+    <div class="info" id="info"></div>
+    <div id="dirtLayer"></div>
+    <svg id="pet" viewBox="0 0 100 100" class="bounce"></svg>
+    <div class="msg" id="msg"></div>
+    <div class="overlay" id="overlay"></div>
+  </div>
+  <div class="buttons">
+    <button id="btn-feed">🍙<span>ごはん</span></button>
+    <button id="btn-play">⚽<span>あそぶ</span></button>
+    <button id="btn-bath">🛁<span>おふろ</span></button>
+    <button id="btn-sleep">🌙<span>ねる</span></button>
+  </div>
+  <div class="sub">
+    <button id="btn-dex">📖 ずかん</button>
+    <button id="btn-reset">🥚 さいしょから</button>
+  </div>
+</div>
+
+<script>
+// ===== 進化の定義 =====
+// stage: 0=たまご 1=ベビー 2=こども 3=おとな
+const FORMS = {
+  egg:    { name:"たまご",       stage:0, color:"#fff7e0" },
+  baby:   { name:"ぷにベビー",   stage:1, color:"#ffe08a" },
+  childG: { name:"ぷにまる",     stage:2, color:"#8fd3ff" },  // よく世話された
+  childB: { name:"とげぷに",     stage:2, color:"#b49ad6" },  // 世話がいまいち
+  adultS: { name:"きらぷにドラゴン", stage:3, color:"#ffb3d1" }, // 最高のお世話
+  adultG: { name:"もこぷに",     stage:3, color:"#9be7a8" },  // ふつうに良い
+  adultB: { name:"やみぷに",     stage:3, color:"#6c6c8a" },  // お世話不足
+};
+// 進化までの時間（秒）
+const EVOLVE_AT = { egg:15, baby:120, child:300 };
+
+const $ = id => document.getElementById(id);
+let S;  // ゲーム状態
+
+function newGame() {
+  S = { form:"egg", age:0, hunger:80, happy:80, clean:80, energy:80,
+        sleeping:false, careSum:0, careN:0, dirt:0, dead:false, seen:["egg"] };
+}
+function load() {
+  try { const d = JSON.parse(localStorage.getItem("punicchi")); if (d && d.form) { S = d; return; } } catch(e) {}
+  newGame();
+}
+function save() { try { localStorage.setItem("punicchi", JSON.stringify(S)); } catch(e) {} }
+
+const clamp = v => Math.max(0, Math.min(100, v));
+
+// ===== キャラクター描画 (SVG) =====
+function drawPet() {
+  const f = FORMS[S.form], c = f.color, svg = $("pet");
+  const sad = !S.sleeping && Math.min(S.hunger, S.happy, S.clean, S.energy) < 25;
+  const eyes = S.sleeping
+    ? `<path d="M36 50 q5 4 10 0 M54 50 q5 4 10 0" stroke="#333" stroke-width="2.5" fill="none"/>`
+    : `<circle cx="41" cy="50" r="4" fill="#333"/><circle cx="59" cy="50" r="4" fill="#333"/>
+       <circle cx="42.5" cy="48.5" r="1.3" fill="#fff"/><circle cx="60.5" cy="48.5" r="1.3" fill="#fff"/>`;
+  const mouth = S.sleeping ? `<circle cx="50" cy="61" r="2" fill="#333"/>`
+    : sad ? `<path d="M44 64 q6 -5 12 0" stroke="#333" stroke-width="2.5" fill="none"/>`
+          : `<path d="M44 60 q6 6 12 0" stroke="#333" stroke-width="2.5" fill="none"/>`;
+  const cheeks = `<ellipse cx="33" cy="58" rx="5" ry="3" fill="#ff8fab" opacity=".6"/><ellipse cx="67" cy="58" rx="5" ry="3" fill="#ff8fab" opacity=".6"/>`;
+  let body = "";
+  switch (S.form) {
+    case "egg":
+      body = `<ellipse cx="50" cy="58" rx="28" ry="34" fill="${c}" stroke="#d9c38a" stroke-width="3"/>
+              <path d="M30 55 l8 -6 l8 6 l8 -6 l8 6 l8 -6" stroke="#f0a35e" stroke-width="3" fill="none"/>
+              <circle cx="42" cy="72" r="4" fill="#f6c96a"/><circle cx="60" cy="40" r="3" fill="#f6c96a"/>`;
+      svg.innerHTML = body; return;
+    case "baby":
+      body = `<ellipse cx="50" cy="62" rx="26" ry="24" fill="${c}"/>`; break;
+    case "childG":
+      body = `<ellipse cx="50" cy="58" rx="32" ry="30" fill="${c}"/>
+              <ellipse cx="28" cy="34" rx="7" ry="10" fill="${c}"/><ellipse cx="72" cy="34" rx="7" ry="10" fill="${c}"/>`; break;
+    case "childB":
+      body = `<path d="M50 20 l8 14 l14 -6 l-2 14 l14 4 l-10 10 l8 12 l-14 2 l-2 14 l-16 -8 l-16 8 l-2 -14 l-14 -2 l8 -12 l-10 -10 l14 -4 l-2 -14 l14 6 z" fill="${c}"/>`; break;
+    case "adultS":
+      body = `<path d="M14 40 q-6 -20 14 -14 q-2 14 6 18z M86 40 q6 -20 -14 -14 q2 14 -6 18z" fill="#ffd36e"/>
+              <ellipse cx="50" cy="58" rx="32" ry="32" fill="${c}"/>
+              <path d="M40 24 l4 -12 l6 10 l6 -10 l4 12" fill="#ffd36e"/>
+              <path d="M76 82 q16 4 14 -12" stroke="${c}" stroke-width="8" fill="none" stroke-linecap="round"/>
+              <text x="50" y="86" font-size="10" text-anchor="middle">✨</text>`; break;
+    case "adultG":
+      body = `<circle cx="30" cy="40" r="14" fill="${c}"/><circle cx="70" cy="40" r="14" fill="${c}"/>
+              <circle cx="50" cy="32" r="16" fill="${c}"/><ellipse cx="50" cy="60" rx="34" ry="30" fill="${c}"/>
+              <path d="M50 14 q4 -8 10 -6 q-2 8 -10 6" fill="#4caf50"/>`; break;
+    case "adultB":
+      body = `<path d="M18 30 l10 18 M82 30 l-10 18" stroke="${c}" stroke-width="8" stroke-linecap="round"/>
+              <ellipse cx="50" cy="60" rx="32" ry="30" fill="${c}"/>
+              <path d="M22 86 q8 -6 14 0 q8 -6 14 0 q8 -6 14 0 q8 -6 14 0" fill="${c}"/>`; break;
+  }
+  svg.innerHTML = body + (S.form === "adultB" ? "" : cheeks) + eyes + mouth;
+}
+
+// ===== 画面更新 =====
+function render() {
+  for (const k of ["hunger","happy","clean","energy"]) $("b-"+k).style.width = S[k] + "%";
+  const f = FORMS[S.form];
+  const stageName = ["たまご","ベビー期","こども期","おとな期"][f.stage];
+  $("info").textContent = `${f.name}（${stageName}）  ${Math.floor(S.age/60)}分${S.age%60}秒`;
+  $("screen").classList.toggle("night", S.sleeping);
+  const isEgg = S.form === "egg";
+  ["feed","play","bath"].forEach(a => $("btn-"+a).disabled = S.sleeping || isEgg || S.dead);
+  $("btn-sleep").disabled = isEgg || S.dead;
+  $("btn-sleep").innerHTML = S.sleeping ? "☀️<span>おきる</span>" : "🌙<span>ねる</span>";
+  // よごれ表示
+  const layer = $("dirtLayer"); layer.innerHTML = "";
+  const n = S.clean < 30 ? 3 : S.clean < 60 ? 1 : 0;
+  const pos = [[40,220],[250,230],[70,150]];
+  for (let i=0;i<n;i++) layer.innerHTML += `<div class="dirt" style="left:${pos[i][0]}px;top:${pos[i][1]}px">💩</div>`;
+  if (S.sleeping) layer.innerHTML += `<div class="zzz">💤</div>`;
+  drawPet();
+}
+
+let msgTimer;
+function say(t) { $("msg").textContent = t; clearTimeout(msgTimer); msgTimer = setTimeout(()=>$("msg").textContent="", 2500); }
+function fx(emoji) {
+  const e = document.createElement("div"); e.className = "fx"; e.textContent = emoji;
+  e.style.left = (140 + Math.random()*60) + "px"; e.style.top = "120px";
+  $("screen").appendChild(e); setTimeout(()=>e.remove(), 1500);
+}
+function anim(cls) { const p=$("pet"); p.classList.remove("bounce","jump","shake"); void p.offsetWidth; p.classList.add(cls);
+  setTimeout(()=>{ p.classList.remove(cls); if(!S.sleeping) p.classList.add("bounce"); }, 1300); }
+
+// ===== アクション =====
+function feed() {
+  if (S.hunger >= 95) { say("もうおなかいっぱい…"); anim("shake"); return; }
+  S.hunger = clamp(S.hunger + 30); S.energy = clamp(S.energy + 5); S.clean = clamp(S.clean - 5);
+  fx("🍙"); anim("jump"); say("もぐもぐ… おいしい！"); render(); save();
+}
+function bath() {
+  S.clean = 100; S.dirt = 0; S.happy = clamp(S.happy + 5);
+  fx("🫧"); setTimeout(()=>fx("🫧"),300); anim("jump"); say("さっぱり〜♪"); render(); save();
+}
+function toggleSleep() {
+  S.sleeping = !S.sleeping;
+  if (S.sleeping) { $("pet").classList.remove("bounce"); say("おやすみなさい…"); }
+  else { $("pet").classList.add("bounce"); say(S.energy < 60 ? "まだねむい…" : "おはよう！"); }
+  render(); save();
+}
+
+// あそぶ：右か左か当てるミニゲーム
+let playRound = 0, playWins = 0;
+function play() {
+  if (S.energy < 15) { say("つかれてあそべない…"); anim("shake"); return; }
+  playRound = 0; playWins = 0; nextRound();
+}
+function nextRound() {
+  const o = $("overlay");
+  if (playRound >= 3) {
+    const gain = 10 + playWins * 10;
+    S.happy = clamp(S.happy + gain); S.energy = clamp(S.energy - 15); S.hunger = clamp(S.hunger - 10);
+    o.innerHTML = `<div style="font-size:18px">${playWins}/3 あたり！</div><div>きげん +${gain}</div>
+      <button id="ok">OK</button>`;
+    $("ok").onclick = () => { o.classList.remove("show"); fx("🎵"); anim("jump"); render(); save(); };
+    return;
+  }
+  o.innerHTML = `<div>どっちを向くかな？（${playRound+1}/3）</div>
+    <div class="row"><button data-d="0">⬅️</button><button data-d="1">➡️</button></div>`;
+  o.classList.add("show");
+  o.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const ans = Math.random() < .5 ? 0 : 1, hit = +b.dataset.d === ans;
+    if (hit) playWins++;
+    playRound++;
+    o.innerHTML = `<div style="font-size:40px">${ans ? "➡️" : "⬅️"}</div><div style="font-size:18px">${hit ? "あたり！🎉" : "はずれ…"}</div>`;
+    setTimeout(nextRound, 800);
+  });
+}
+
+// ===== 進化 =====
+function careScore() { return S.careN ? S.careSum / S.careN : 50; }
+function evolve(to) {
+  const from = FORMS[S.form].name;
+  S.form = to; if (!S.seen.includes(to)) S.seen.push(to);
+  const o = $("overlay");
+  o.innerHTML = `<div style="font-size:30px">✨</div><div>${from} は</div>
+    <div style="font-size:20px;font-weight:bold">${FORMS[to].name}</div><div>にしんかした！</div><button id="ok">OK</button>`;
+  o.classList.add("show"); $("ok").onclick = () => o.classList.remove("show");
+  render(); save();
+}
+function checkEvolve() {
+  const avg = careScore();
+  if (S.form === "egg" && S.age >= EVOLVE_AT.egg) { S.careSum = 0; S.careN = 0; evolve("baby"); }
+  else if (S.form === "baby" && S.age >= EVOLVE_AT.baby) { const r = avg >= 60 ? "childG" : "childB"; S.careSum=0; S.careN=0; evolve(r); }
+  else if (FORMS[S.form].stage === 2 && S.age >= EVOLVE_AT.child) {
+    const good = S.form === "childG";
+    evolve(avg >= 75 && good ? "adultS" : avg >= 55 ? "adultG" : "adultB");
+  }
+}
+
+// ===== 時間経過（1秒ごと） =====
+function tick() {
+  if (S.dead) return;
+  S.age++;
+  if (S.form !== "egg") {
+    if (S.sleeping) {
+      S.energy = clamp(S.energy + 2); S.hunger = clamp(S.hunger - 0.3);
+      if (S.energy >= 100) { S.sleeping = false; $("pet").classList.add("bounce"); say("よくねた！おはよう！"); }
+    } else {
+      S.hunger = clamp(S.hunger - 0.6); S.happy = clamp(S.happy - 0.5);
+      S.clean  = clamp(S.clean - 0.4);  S.energy = clamp(S.energy - 0.35);
+      if (S.clean < 30) S.happy = clamp(S.happy - 0.3);
+    }
+    S.careSum += (S.hunger + S.happy + S.clean + S.energy) / 4; S.careN++;
+    if (S.hunger <= 0 && S.happy <= 0) gameOver();
+    else if (!S.sleeping && S.age % 15 === 0) {
+      if (S.hunger < 25) say("おなかすいた…🍙");
+      else if (S.clean < 25) say("からだがかゆい…🛁");
+      else if (S.energy < 20) say("ねむい…🌙");
+      else if (S.happy < 25) say("たいくつ…⚽");
+    }
+  }
+  checkEvolve(); render();
+  if (S.age % 5 === 0) save();
+}
+function gameOver() {
+  S.dead = true; save();
+  const o = $("overlay");
+  o.innerHTML = `<div style="font-size:30px">👼</div><div>${FORMS[S.form].name} は<br>おそらへ旅立ってしまった…</div><button id="ok">🥚</button>`;
+  o.classList.add("show"); $("ok").onclick = reset;
+}
+function reset() { const seen = S ? S.seen : ["egg"]; newGame(); S.seen = seen; $("overlay").classList.remove("show"); render(); save(); say("あたらしいたまごだ！"); }
+
+function showDex() {
+  const o = $("overlay");
+  const list = Object.entries(FORMS).map(([k,f]) => S.seen.includes(k) ? `✅ ${f.name}` : "❓ ？？？").join("<br>");
+  o.innerHTML = `<div style="font-weight:bold">📖 ずかん（${S.seen.length}/${Object.keys(FORMS).length}）</div>
+    <div class="dex">${list}</div><div class="dex">お世話のしかたで進化先が変わるよ</div><button id="ok">とじる</button>`;
+  o.classList.add("show"); $("ok").onclick = () => o.classList.remove("show");
+}
+
+$("btn-feed").onclick = feed;
+$("btn-play").onclick = play;
+$("btn-bath").onclick = bath;
+$("btn-sleep").onclick = toggleSleep;
+$("btn-dex").onclick = showDex;
+$("btn-reset").onclick = () => { if (confirm("さいしょからやりなおす？")) reset(); };
+
+load(); render();
+if (S.dead) gameOver(); else say(S.form === "egg" ? "たまごがうまれそう…" : "おかえり！");
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

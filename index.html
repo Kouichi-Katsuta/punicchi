@@ -195,31 +195,57 @@ function toggleSleep() {
   render(); save();
 }
 
-// あそぶ：右か左か当てるミニゲーム
-let playRound = 0, playWins = 0;
+// あそぶ：○×クイズ（3 もん）
+// [もんだい, こたえ(true=○), ひとこと]
+const QUIZ = [
+  ["いちごは あかい くだもの", true, "あまくて おいしいね"],
+  ["ぞうの はなは ながい", true, "はなで みずも のめるよ"],
+  ["ペンギンは そらを とべる", false, "およぐのが とくいだよ"],
+  ["1たす1は 3", false, "こたえは 2だよ"],
+  ["おひさまは にしから のぼる", false, "ひがしから のぼるよ"],
+  ["さかなは みずの なかで くらす", true, "えらで いきを するよ"],
+  ["ゆきは あつい", false, "ゆきは つめたいよ"],
+  ["1しゅうかんは 7にち", true, "げつ〜にちで 7にち"],
+  ["かえるの こどもは おたまじゃくし", true, "あしが はえて かえるに なるよ"],
+  ["くもの あしは 6ぽん", false, "くもの あしは 8ぽん"],
+  ["うさぎの みみは みじかい", false, "ながい みみだね"],
+  ["こおりは みずが こおったもの", true, "とけると みずに もどるよ"],
+  ["いぬは「ニャー」と なく", false, "いぬは「ワン」だよ"],
+  ["3たす2は 5", true, "せいかい！"],
+  ["とけいの はりは みぎまわり", true, "みぎに くるくる まわるよ"],
+  ["バナナの かわは きいろい", true, "むいて たべようね"],
+  ["にわとりは たまごを うむ", true, "まいにち うむことも あるよ"],
+  ["つきは じぶんで ひかっている", false, "おひさまの ひかりで ひかるよ"],
+];
+let playRound = 0, playWins = 0, playQs = [];
 function play() {
   if (S.energy < 15) { say("つかれてあそべない…"); anim("shake"); return; }
-  playRound = 0; playWins = 0; nextRound();
+  playRound = 0; playWins = 0;
+  playQs = [...QUIZ].sort(() => Math.random() - .5).slice(0, 3);
+  nextRound();
 }
 function nextRound() {
   const o = $("overlay");
   if (playRound >= 3) {
     const gain = 10 + playWins * 10;
     S.happy = clamp(S.happy + gain); S.energy = clamp(S.energy - 15); S.hunger = clamp(S.hunger - 10);
-    o.innerHTML = `<div style="font-size:18px">${playWins}/3 あたり！</div><div>きげん +${gain}</div>
+    o.innerHTML = `<div style="font-size:18px">${playWins}/3 せいかい！</div><div>きげん +${gain}</div>
       <button id="ok">OK</button>`;
     $("ok").onclick = () => { o.classList.remove("show"); fx("🎵"); anim("jump"); render(); save(); };
     return;
   }
-  o.innerHTML = `<div>どっちを向くかな？（${playRound+1}/3）</div>
-    <div class="row"><button data-d="0">⬅️</button><button data-d="1">➡️</button></div>`;
+  const [q, ans, note] = playQs[playRound];
+  o.innerHTML = `<div>○×クイズ（${playRound+1}/3）</div>
+    <div style="font-size:17px;font-weight:bold">${q}</div>
+    <div class="row"><button data-a="1">⭕</button><button data-a="0">❌</button></div>`;
   o.classList.add("show");
   o.querySelectorAll("button").forEach(b => b.onclick = () => {
-    const ans = Math.random() < .5 ? 0 : 1, hit = +b.dataset.d === ans;
+    const hit = (b.dataset.a === "1") === ans;
     if (hit) playWins++;
     playRound++;
-    o.innerHTML = `<div style="font-size:40px">${ans ? "➡️" : "⬅️"}</div><div style="font-size:18px">${hit ? "あたり！🎉" : "はずれ…"}</div>`;
-    setTimeout(nextRound, 800);
+    o.innerHTML = `<div style="font-size:18px">${hit ? "せいかい！🎉" : "ざんねん…"}</div>
+      <div style="font-size:36px">${ans ? "⭕" : "❌"}</div><div>${note}</div>`;
+    setTimeout(nextRound, 1500);
   });
 }
 

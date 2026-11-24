@@ -36,7 +36,10 @@ src/
     Pet.jsx              キャラクターの SVG 描画（形態ごとに JSX で定義）
     StatusBars.jsx       4つのゲージ
     Overlays.jsx         あそぶミニゲーム / 進化 / ゲームオーバー / ずかん
+    TitleScreen.jsx      タイトル画面（ロゴは public/logo.svg。差し替え可）
 ```
+
+- タイトル中は `useGame({ paused: true })` で時間停止。バージョン表示は `vite.config.js` の `define` で `package.json` の `version` を `__APP_VERSION__` として埋め込む
 
 ## 設計方針
 

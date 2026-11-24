@@ -59,3 +59,19 @@ button:disabled { opacity:.45; cursor:not-allowed; }
 .dex-item .unknown { width:36px; height:36px; display:flex; align-items:center; justify-content:center;
   background:#ddd; border-radius:50%; font-weight:bold; color:#888; }
 .dex-note { font-size:11px; }
+
+/* ===== タイトル画面 ===== */
+.title-screen { position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  background:radial-gradient(circle at 30% 20%, #fff3f8, #ffd6e7 60%, #f7b8d2); padding:16px 16px 48px; }
+.title-logo { width:min(320px, 86vw); height:auto; animation:logoFloat 2.4s infinite ease-in-out; }
+.title-logo-text { font-size:52px; font-weight:bold; color:#ff7fb0; letter-spacing:.08em;
+  text-shadow:3px 3px 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 0 6px 0 var(--shell-dark); animation:logoFloat 2.4s infinite ease-in-out; }
+@keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.title-pet { animation:logoFloat 1.2s infinite ease-in-out; }
+.title-start { border-radius:20px; padding:12px 34px; font-size:20px; background:#fff4b8; box-shadow:0 5px 0 #d8b94a; animation:blink 1.6s infinite; }
+.title-start:active { transform:translateY(4px); box-shadow:0 1px 0 #d8b94a; }
+@keyframes blink { 50%{ opacity:.6 } }
+
+/* ===== コピーライト ===== */
+.copyright { position:fixed; left:0; right:0; bottom:0; z-index:30; text-align:center; font-size:11px; color:#a5577a;
+  padding:6px 0 calc(6px + env(safe-area-inset-bottom)); pointer-events:none; }

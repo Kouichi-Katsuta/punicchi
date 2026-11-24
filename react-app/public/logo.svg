@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120">
+  <!-- 仮のタイトルロゴ。同じ名前の画像で差し替えるか、参照先を変更してください -->
+  <g font-family="Hiragino Maru Gothic ProN, Meiryo, sans-serif" font-weight="bold" font-size="64" text-anchor="middle">
+    <text x="160" y="82" fill="none" stroke="#e5739f" stroke-width="16" stroke-linejoin="round">ぷにっち</text>
+    <text x="160" y="82" fill="#fff" stroke="#fff" stroke-width="4" stroke-linejoin="round">ぷにっち</text>
+    <text x="160" y="82" fill="#ff7fb0">ぷにっち</text>
+  </g>
+  <circle cx="34" cy="26" r="6" fill="#fff4b8"/>
+  <circle cx="290" cy="96" r="5" fill="#fff4b8"/>
+  <path d="M288 18 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z" fill="#fff"/>
+</svg>

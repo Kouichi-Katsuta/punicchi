@@ -6,13 +6,15 @@ import { useFitScale } from "./hooks/useFitScale.js";
 import Pet from "./components/Pet.jsx";
 import StatusBars from "./components/StatusBars.jsx";
 import { DexDialog, EvolutionDialog, GameOverDialog, PlayGame } from "./components/Overlays.jsx";
+import TitleScreen from "./components/TitleScreen.jsx";
 
 const DIRT_POS = [[40, 220], [250, 230], [70, 150]];
 
 export default function App() {
-  const { state, message, effects, anim, evolution, actions } = useGame();
+  const [started, setStarted] = useState(false); // タイトル画面をぬけたか
+  const { state, message, effects, anim, evolution, actions } = useGame({ paused: !started });
   const [modal, setModal] = useState(null); // "play" | "dex" | null
-  const [deviceRef, scale] = useFitScale();
+  const [deviceRef, scale] = useFitScale(16, 24); // 24px = 下のコピーライトの高さ
 
   const form = FORMS[state.form];
   const isEgg = state.form === "egg";
@@ -30,6 +32,9 @@ export default function App() {
   else if (modal === "dex") overlay = <DexDialog seen={state.seen} onClose={() => setModal(null)} />;
 
   return (
+    <>
+    {!started && <TitleScreen state={state} onStart={() => setStarted(true)} />}
+    <footer className="copyright">© OimoNana　ver {__APP_VERSION__}</footer>
     <div className="device" ref={deviceRef} style={{ transform: `scale(${scale})` }}>
       <div className="title">ぷにっち</div>
       <div className={`screen ${state.sleeping ? "night" : ""}`}>
@@ -65,5 +70,6 @@ export default function App() {
         <button onClick={() => { if (confirm("さいしょからやりなおす？")) reset(); }}>🥚 さいしょから</button>
       </div>
     </div>
+    </>
   );
 }

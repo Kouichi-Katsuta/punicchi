@@ -44,9 +44,29 @@
   .overlay .row { display:flex; gap:12px; }
   .overlay button { width:70px; border-radius:14px; aspect-ratio:auto; padding:10px; font-size:24px; }
   .dex { font-size:11px; line-height:1.6; }
+  /* ===== タイトル画面 ===== */
+  .title-screen { position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    background:radial-gradient(circle at 30% 20%, #fff3f8, #ffd6e7 60%, #f7b8d2); padding:16px 16px 48px; transition:opacity .4s; }
+  .title-screen.hide { opacity:0; pointer-events:none; }
+  .title-logo { width:min(320px, 86vw); height:auto; animation:logoFloat 2.4s infinite ease-in-out; }
+  .title-logo-text { font-size:52px; font-weight:bold; color:#ff7fb0; letter-spacing:.08em;
+    text-shadow:3px 3px 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 0 6px 0 var(--shell-dark); animation:logoFloat 2.4s infinite ease-in-out; }
+  @keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .title-pet { width:110px; height:110px; animation:logoFloat 1.2s infinite ease-in-out; }
+  .title-start { border-radius:20px; aspect-ratio:auto; padding:12px 34px; font-size:20px; flex-direction:row; animation:blink 1.6s infinite; }
+  @keyframes blink { 50%{ opacity:.6 } }
+  .copyright { position:fixed; left:0; right:0; bottom:0; z-index:30; text-align:center; font-size:11px; color:#a5577a;
+    padding:6px 0 calc(6px + env(safe-area-inset-bottom)); pointer-events:none; }
 </style>
 </head>
 <body>
+<!-- タイトル画面。ロゴ画像は script 先頭の TITLE_LOGO で差し替えられる -->
+<div class="title-screen" id="titleScreen">
+  <img class="title-logo" id="titleLogo" alt="ぷにっち">
+  <svg class="title-pet" id="titlePet" viewBox="0 0 100 100"></svg>
+  <button class="title-start" id="btn-start">はじめる</button>
+</div>
+<div class="copyright" id="copyright"></div>
 <div class="device">
   <div class="title">ぷにっち</div>
   <div class="screen" id="screen">
@@ -318,9 +338,26 @@ $("btn-sleep").onclick = toggleSleep;
 $("btn-dex").onclick = showDex;
 $("btn-reset").onclick = () => { if (confirm("さいしょからやりなおす？")) reset(); };
 
-load(); render();
-if (S.dead) gameOver(); else say(S.form === "egg" ? "たまごがうまれそう…" : "おかえり！");
-setInterval(tick, 1000);
+// ===== タイトル画面 =====
+const VERSION = "1.0.0";                  // react-app/package.json の version と合わせる
+const TITLE_LOGO = "assets/logo.svg";     // ロゴ画像（png / jpg なども可）。読めないときは文字ロゴになる
+
+function showTitle() {
+  $("copyright").textContent = `© OimoNana　ver ${VERSION}`;
+  const logo = $("titleLogo");
+  logo.onerror = () => { const t = document.createElement("div"); t.className = "title-logo-text"; t.textContent = "ぷにっち"; logo.replaceWith(t); };
+  logo.src = TITLE_LOGO;
+  $("titlePet").innerHTML = $("pet").innerHTML;   // いまの子をタイトルにも表示
+  $("btn-start").textContent = S.age > 0 && !S.dead ? "つづきから" : "はじめる";
+  $("btn-start").onclick = startGame;
+}
+function startGame() {
+  $("titleScreen").classList.add("hide");
+  if (S.dead) gameOver(); else say(S.form === "egg" ? "たまごがうまれそう…" : "おかえり！");
+  setInterval(tick, 1000);   // タイトル中は時間をすすめない
+}
+
+load(); render(); showTitle();
 </script>
 </body>
 </html>

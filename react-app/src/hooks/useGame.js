@@ -14,7 +14,7 @@ function reducer(state, action) {
 }
 
 // ゲーム状態と UI 演出（メッセージ・エフェクト・アニメ）をまとめて管理するフック
-export function useGame() {
+export function useGame({ paused = false } = {}) {
   const [state, dispatch] = useReducer(reducer, undefined, L.loadState);
   const [message, setMessage] = useState("");
   const [effects, setEffects] = useState([]);   // { id, emoji, left }
@@ -44,17 +44,19 @@ export function useGame() {
     animTimer.current = setTimeout(() => setAnim(null), 1300);
   }, []);
 
-  // 起動時のあいさつ
+  // ゲーム開始時（タイトル画面をぬけたとき）のあいさつ
   useEffect(() => {
+    if (paused) return;
     say(state.form === "egg" ? "たまごがうまれそう…" : "おかえり！");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [paused]);
 
-  // 1 秒ごとの時間経過
+  // 1 秒ごとの時間経過（タイトル画面のあいだは止める）
   useEffect(() => {
+    if (paused) return;
     const id = setInterval(() => dispatch({ type: "TICK" }), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [paused]);
 
   // 状態変化に応じた演出と保存
   useEffect(() => {

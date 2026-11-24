@@ -48,6 +48,11 @@ childG/childB ─(300秒)→ adultS（childG かつ スコア≥75）
 - 低ステータス時は困り顔、睡眠中は閉じ目
 - エフェクト（`fx()`）、アニメーション（`anim()`：bounce / jump / shake）は CSS keyframes
 
+### タイトル画面
+- 起動時にタイトル画面（`showTitle()`）を表示し、「はじめる / つづきから」で `startGame()`。タイトル中は `tick()` を止める
+- ロゴ画像は `TITLE_LOGO`（既定 `assets/logo.svg`）。読み込めないと文字ロゴにフォールバック
+- 画面下部にコピーライト「© OimoNana」とバージョン `VERSION` を表示。React 版は `package.json` の `version` を使うので両方そろえる
+
 ### 保存
 - `localStorage` のキー `punicchi` に状態 `S` を JSON で保存（5 秒ごと＋操作時）
 - 読み書きは try/catch で囲んでいる（ストレージが使えない環境でも動作継続）

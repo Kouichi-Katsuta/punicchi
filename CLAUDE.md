@@ -44,7 +44,8 @@ childG/childB ─(300秒)→ adultS（childG かつ スコア≥75）
 - 判定は `checkEvolve()`、演出は `evolve()`
 
 ### 描画
-- キャラクターは `drawPet()` が形態ごとに SVG を組み立てて描画（画像ファイルなし）
+- キャラクターは `drawPet()` が形態ごとに SVG を組み立てて描画
+- `assets/pets/` に `形態キー.png` / `形態キー_sad.png` / `形態キー_sleep.png` があればそちらを優先（`PET_IMG_DIR` / `petImageUrl()`）。表情別 → 形態別 → SVG の順にフォールバック。React 版は `react-app/public/pets/`（`game/petImages.js`）
 - 低ステータス時は困り顔、睡眠中は閉じ目
 - エフェクト（`fx()`）、アニメーション（`anim()`：bounce / jump / shake）は CSS keyframes
 

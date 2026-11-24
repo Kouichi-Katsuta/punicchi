@@ -124,10 +124,41 @@ function save() { try { localStorage.setItem("punicchi", JSON.stringify(S)); } c
 
 const clamp = v => Math.max(0, Math.min(100, v));
 
+// ===== キャラクター画像（差し替え用） =====
+// PET_IMG_DIR に「形態キー_表情.png」を置くと、その画像で表示する
+//   例: baby.png（ふつう） / baby_sad.png（困り顔） / baby_sleep.png（ねている）
+// 探す順番: 形態_表情.png → 形態.png → どちらも無ければ下の SVG で描く
+const PET_IMG_DIR = "assets/pets/";
+const PET_IMG_EXT = "png";
+const petImgCache = {};   // url → "ok" | "ng" | "loading"
+function petImageUrl(form, mood) {
+  const urls = [`${PET_IMG_DIR}${form}_${mood}.${PET_IMG_EXT}`, `${PET_IMG_DIR}${form}.${PET_IMG_EXT}`];
+  for (const u of mood === "normal" ? urls.slice(1) : urls) {
+    const st = petImgCache[u];
+    if (st === "ok") return u;
+    if (st === "ng") continue;
+    if (!st) {   // はじめて見る画像は読み込みを試し、結果が出たら描き直す
+      petImgCache[u] = "loading";
+      const img = new Image();
+      img.onload = () => { petImgCache[u] = "ok"; drawPet(); syncTitlePet(); };
+      img.onerror = () => { petImgCache[u] = "ng"; drawPet(); syncTitlePet(); };
+      img.src = u;
+    }
+    return null;   // 読み込み中は SVG で表示しておく
+  }
+  return null;
+}
+function petImageTag(url) {
+  return `<image href="${url}" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMax meet"/>`;
+}
+
 // ===== キャラクター描画 (SVG) =====
 function drawPet() {
   const f = FORMS[S.form], c = f.color, svg = $("pet");
   const sad = !S.sleeping && Math.min(S.hunger, S.happy, S.clean, S.energy) < 25;
+  const mood = S.form === "egg" ? "normal" : S.sleeping ? "sleep" : sad ? "sad" : "normal";
+  const imgUrl = petImageUrl(S.form, mood);
+  if (imgUrl) { svg.innerHTML = petImageTag(imgUrl); return; }
   const eyes = S.sleeping
     ? `<path d="M36 50 q5 4 10 0 M54 50 q5 4 10 0" stroke="#333" stroke-width="2.5" fill="none"/>`
     : `<circle cx="41" cy="50" r="4" fill="#333"/><circle cx="59" cy="50" r="4" fill="#333"/>
@@ -347,9 +378,12 @@ function showTitle() {
   const logo = $("titleLogo");
   logo.onerror = () => { const t = document.createElement("div"); t.className = "title-logo-text"; t.textContent = "ぷにっち"; logo.replaceWith(t); };
   logo.src = TITLE_LOGO;
-  $("titlePet").innerHTML = $("pet").innerHTML;   // いまの子をタイトルにも表示
+  syncTitlePet();   // いまの子をタイトルにも表示
   $("btn-start").textContent = S.age > 0 && !S.dead ? "つづきから" : "はじめる";
   $("btn-start").onclick = startGame;
+}
+function syncTitlePet() {
+  if (!$("titleScreen").classList.contains("hide")) $("titlePet").innerHTML = $("pet").innerHTML;
 }
 function startGame() {
   $("titleScreen").classList.add("hide");

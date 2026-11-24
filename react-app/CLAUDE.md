@@ -29,6 +29,7 @@ src/
   game/
     constants.js         FORMS（形態定義）、EVOLVE_AT、ステータス表示情報など
     logic.js             純粋関数のゲームロジック（tick / feed / bath / 進化判定 / 保存）
+    petImages.js         キャラ画像の差し替え（public/pets/ の PNG を探し、無ければ SVG にフォールバック）
   hooks/
     useGame.js           useReducer で状態管理 + メッセージ・エフェクト・アニメ・進化演出
     useFitScale.js       画面サイズに合わせて本体を縮小（スマホ対応）

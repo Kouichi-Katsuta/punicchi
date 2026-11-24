@@ -1,4 +1,5 @@
 import { FORMS } from "../game/constants.js";
+import { usePetImage } from "../game/petImages.js";
 
 function Face({ sleeping, sad, cheeks }) {
   return (
@@ -97,9 +98,13 @@ function Egg({ c }) {
 export default function Pet({ form, sleeping = false, sad = false, anim = null, className = "", size }) {
   const c = FORMS[form].color;
   const cls = ["pet", anim ?? (sleeping ? "" : "bounce"), className].filter(Boolean).join(" ");
+  const mood = form === "egg" ? "normal" : sleeping ? "sleep" : sad ? "sad" : "normal";
+  const imgUrl = usePetImage(form, mood); // public/pets/ に画像があればそちらを使う
   return (
     <svg viewBox="0 0 100 100" className={cls} style={size ? { width: size, height: size } : undefined}>
-      {form === "egg" ? (
+      {imgUrl ? (
+        <image href={imgUrl} x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMax meet" />
+      ) : form === "egg" ? (
         <Egg c={c} />
       ) : (
         <>
